@@ -42,7 +42,7 @@ body {
 </style>
 """, unsafe_allow_html=True)
 
-st.title("TheosGPT: Christian Search AI")
+st.title("BibleGPT: Christian Search AI")
 
 # Create two columns: left for chat, right for Google search results.
 left_col, right_col = st.columns([2, 1])
