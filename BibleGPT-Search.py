@@ -42,7 +42,7 @@ body {
 </style>
 """, unsafe_allow_html=True)
 
-st.title("BibleGPT: Christian Search AI")
+st.title("TheosGPT: Christian Search AI")
 
 # Create two columns: left for chat, right for Google search results.
 left_col, right_col = st.columns([2, 1])
@@ -208,6 +208,7 @@ if submit:
                 st.session_state.messages.append({"role": "assistant", "content": execution_result})
             else:
                 st.session_state.messages.append({"role": "assistant", "content": answer.strip()})
+		st.session_state["query_input"] = ""
             
             # Fetch Google search results using the provided API.
             try:
@@ -221,8 +222,3 @@ if submit:
         # Refresh the conversation display and update the search results.
         display_messages()
         display_search_results(google_results)
-    
-    # Clear the text input by removing its key and rerunning the app.
-    if "query_input" in st.session_state:
-        del st.session_state["query_input"]
-   
