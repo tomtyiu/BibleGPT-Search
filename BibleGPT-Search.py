@@ -155,7 +155,7 @@ display_search_results([])
 with left_col:
     col_input, col_submit = st.columns([9, 1])
     with col_input:
-        query = st.text_input("Enter your finance question or code (prefix with 'Code:'):", key="query_input",autocomplete="None")
+        query = st.text_input("Enter your question:", key="query_input")
     with col_submit:
         submit = st.button("→")
 
