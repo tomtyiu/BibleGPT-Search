@@ -55,7 +55,7 @@ with left_col:
 
 # Initialize conversation history if not already present.
 if "messages" not in st.session_state:
-    st.session_state.messages = []
+    st.session_state["messages"] = []
 
 # Placeholders for conversation and search results.
 with left_col:
@@ -112,7 +112,7 @@ def display_messages():
     """Render the conversation history in the left column container."""
     with conversation_placeholder:
         st.markdown("### Conversation")
-        for message in st.session_state.messages:
+        for message in st.session_state["messages"]:
             if message["role"] == "user":
                 st.markdown(
                     f"<div class='user-message'><b>You:</b> {message['content']}</div>",
@@ -155,7 +155,11 @@ display_search_results([])
 with left_col:
     col_input, col_submit = st.columns([9, 1])
     with col_input:
-        query = st.text_input("Enter your finance question or code (prefix with 'Code:'):", key="query_input",autocomplete=True)
+        query = st.text_input(
+            "Enter your finance question or code (prefix with 'Code:'):",
+            key="query_input",
+            autocomplete=True
+        )
     with col_submit:
         submit = st.button("→")
 
@@ -167,9 +171,8 @@ if submit:
         with left_col:
             st.warning("Please enter a question or code.")
     else:
-        # For storing search results to display in the right column.
         google_results = []
-        # If the input is code, process it as code.
+        # Check if the input starts with "Code:" and handle code execution.
         if query.strip().startswith("Code:"):
             code_to_execute = query.strip()[len("Code:"):].strip()
             completion = client.chat.completions.create(
@@ -184,14 +187,12 @@ if submit:
             )
             code_response = completion.choices[0].message.content
             execution_result = save_and_run_code(code_response)
-            st.session_state.messages.append({"role": "assistant", "content": execution_result})
+            st.session_state["messages"].append({"role": "assistant", "content": execution_result})
         else:
             # Append the user's query to the conversation history.
-            st.session_state.messages.append({"role": "user", "content": query})
-            
+            st.session_state["messages"].append({"role": "user", "content": query})
             with st.spinner("Fetching response..."):
                 try:
-                    # Call the API using the provided interface with the web search tool integrated.
                     response = client.responses.create(
                         model="gpt-4o",
                         instructions="You are a Christian search agent. Provide a detailed answer with citations at end of the response.",
@@ -201,24 +202,23 @@ if submit:
                     answer = response.output_text
                 except Exception as e:
                     answer = f"Error: {e}"
-            
-            # If the answer is Python code, execute it.
             if answer.strip().startswith("```python"):
                 execution_result = save_and_run_code(answer)
-                st.session_state.messages.append({"role": "assistant", "content": execution_result})
+                st.session_state["messages"].append({"role": "assistant", "content": execution_result})
             else:
-                st.session_state.messages.append({"role": "assistant", "content": answer.strip()})
-		st.session_state["query_input"] = ""
-            
-            # Fetch Google search results using the provided API.
-            try:
-                google_data = fetch_google_search_results(query)
-                # Assume the API returns organic results under the key "organic"
-                google_results = google_data.get("organic", [])
-            except Exception as e:
-                google_results = []
-                st.error(f"Google Search API error: {e}")
+                st.session_state["messages"].append({"role": "assistant", "content": answer.strip()})
         
-        # Refresh the conversation display and update the search results.
+        # Fetch Google search results.
+        try:
+            google_data = fetch_google_search_results(query)
+            google_results = google_data.get("organic", [])
+        except Exception as e:
+            google_results = []
+            st.error(f"Google Search API error: {e}")
+        
+        # Update the conversation and search results displays.
         display_messages()
         display_search_results(google_results)
+    
+    # Clear the text input field by resetting its session state.
+    st.session_state["query_input"] = ""
